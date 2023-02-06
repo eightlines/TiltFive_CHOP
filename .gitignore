@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+/TiltFiveCHOP.xcodeproj
+/.vs/TiltFiveCHOP
+/Debug
+/Info.plist
+/Main.1.toe
+/TiltFiveCHOP.vcxproj
+/TiltFiveCHOP.vcxproj.filters
+/TiltFiveCHOP.vcxproj.user

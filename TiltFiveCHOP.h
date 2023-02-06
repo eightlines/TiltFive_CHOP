@@ -1,0 +1,107 @@
+/* Shared Use License: This file is owned by Derivative Inc. (Derivative)
+* and can only be used, and/or modified for use, in conjunction with
+* Derivative's TouchDesigner software, and only if you are a licensee who has
+* accepted Derivative's TouchDesigner license or assignment agreement
+* (which also govern the use of this file). You may share or redistribute
+* a modified version of this file provided the following conditions are met:
+*
+* 1. The shared file or redistribution must retain the information set out
+* above and this list of conditions.
+* 2. Derivative's name (Derivative Inc.) or its trademarks may not be used
+* to endorse or promote products derived from this file without specific
+* prior written permission from Derivative.
+*/
+
+#include "CHOP_CPlusPlusBase.h"
+#include "include/TiltFiveNative.hpp"
+
+using namespace TD;
+
+/*
+
+This example file implements a class that does 2 different things depending on
+if a CHOP is connected to the CPlusPlus CHOPs input or not.
+The example is timesliced, which is the more complex way of working.
+
+If an input is connected the node will output the same number of channels as the
+input and divide the first 'N' samples in the input channel by 2. 'N' being the current
+timeslice size. This is noteworthy because if the input isn't changing then the output
+will look wierd since depending on the timeslice size some number of the first samples
+of the input will get used.
+
+If no input is connected then the node will output a smooth sine wave at 120hz.
+*/
+
+
+// To get more help about these functions, look at CHOP_CPlusPlusBase.h
+class TiltFiveCHOP : public CHOP_CPlusPlusBase
+{
+public:
+	TiltFiveCHOP(const OP_NodeInfo* info);
+	virtual ~TiltFiveCHOP();
+
+	virtual void		getGeneralInfo(CHOP_GeneralInfo*, const OP_Inputs*, void* ) override;
+	virtual bool		getOutputInfo(CHOP_OutputInfo*, const OP_Inputs*, void*) override;
+	virtual void		getChannelName(int32_t index, OP_String *name, const OP_Inputs*, void* reserved) override;
+
+	virtual void		execute(CHOP_Output*,
+								const OP_Inputs*,
+								void* reserved) override;
+
+
+	virtual int32_t		getNumInfoCHOPChans(void* reserved1) override;
+	virtual void		getInfoCHOPChan(int index,
+										OP_InfoCHOPChan* chan,
+										void* reserved1) override;
+
+	virtual bool		getInfoDATSize(OP_InfoDATSize* infoSize, void* resereved1) override;
+	virtual void		getInfoDATEntries(int32_t index,
+											int32_t nEntries,
+											OP_InfoDATEntries* entries,
+											void* reserved1) override;
+
+	virtual void		setupParameters(OP_ParameterManager* manager, void *reserved1) override;
+	virtual void		pulsePressed(const char* name, void* reserved1) override;
+
+	using Client = std::shared_ptr<tiltfive::Client>;
+	using Glasses = std::shared_ptr<tiltfive::Glasses>;
+	using Wand = std::shared_ptr<tiltfive::Wand>;
+
+	template <typename T>
+	auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
+	};
+
+private:
+
+	// We don't need to store this pointer, but we do for the example.
+	// The OP_NodeInfo class store information about the node that's using
+	// this instance of the class (like its name).
+	const OP_NodeInfo*	myNodeInfo;
+
+	// In this example this value will be incremented each time the execute()
+	// function is called, then passes back to the CHOP 
+	int32_t				myExecuteCount;
+
+	int prevActive;
+	std::string glassesId;
+
+	double				myOffset;
+
+	void connectT5();
+	auto printGameboardDimensions(Client& client) -> tiltfive::Result<void>;
+	auto printServiceVersion(Client& client) -> tiltfive::Result<void>;
+	auto printUiStatusFlags(Client& client) -> tiltfive::Result<void>;
+
+	//template <typename T>
+	//auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T>;
+
+
+	auto waitForGlasses(Client& client) -> tiltfive::Result<Glasses>;
+	auto readPoses(Glasses& glasses) -> tiltfive::Result<void>;
+	auto doThingsWithGlasses(Glasses& glasses) -> tiltfive::Result<void>;
+
+	class MyParamChangeListener : public tiltfive::ParamChangeListener {
+		auto onSysParamChanged(const std::vector<T5_ParamSys>& changed) -> void override;
+		auto onGlassesParamChanged(const Glasses& glasses, const std::vector<T5_ParamGlasses>& changed) -> void override;
+	};
+};
