@@ -274,8 +274,6 @@ auto T5Connector::waitForGlasses(Client& client) -> tiltfive::Result<Glasses> {
 auto T5Connector::initGlasses(Glasses& glasses) -> tiltfive::Result<void> {
 	std::cout << "Init Glasses: " << glasses << std::endl;
 
-	//auto connectionHelper = glasses->createConnectionHelper("Touchdesigner", std::chrono::milliseconds(10000));
-
 	auto connectionHelper = glasses->createConnectionHelper("TouchDesigner Connector - Player 1");
 	auto connectionResult = connectionHelper->awaitConnection(10000_ms);
 	if (connectionResult) {
@@ -298,6 +296,7 @@ auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 	auto start = std::chrono::steady_clock::now();
 	do {
 		auto pose = glasses->getLatestGlassesPose(kT5_GlassesPoseUsage_GlassesPresentation);
+		//std::cout << pose << std::endl;
 		if (!pose) {
 			if (pose.error() == tiltfive::Error::kTryAgain) {
 				std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
