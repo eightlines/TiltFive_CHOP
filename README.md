@@ -10,3 +10,7 @@ TiltFive is currently supported on Windows OS only.
 Item Type - Copy File
 
 .toe file is a basic implementation of the C++ Operator in TouchDesigner.
+
+## Issues
+
+- Toggle requires disable > enable > disable > enable to properly init the Glasses. Default value for toggle not disabled at start. std::async doesn't wait for first init of Glasses to report back correct data
