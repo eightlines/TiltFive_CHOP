@@ -274,39 +274,41 @@ auto T5Connector::waitForGlasses(Client& client) -> tiltfive::Result<Glasses> {
 auto T5Connector::initGlasses(Glasses& glasses) -> tiltfive::Result<void> {
 	std::cout << "Init Glasses: " << glasses << std::endl;
 
-	//auto connectionHelper = glasses->createConnectionHelper("TouchDesigner Connector - Player 1");
-	//auto connectionResult = connectionHelper->awaitConnection(10000_ms);
-	//if (connectionResult) {
-	//	std::cout << "Glasses connected for exclusive use" << std::endl;
-	//} else {
-	//	std::cerr << "Error connecting to glasses for exclusive use" << std::endl;
-	//	return connectionResult.error();
-	//}
+	//auto connectionHelper = glasses->createConnectionHelper("Touchdesigner", std::chrono::milliseconds(10000));
 
-	//auto result = readPoses(glasses);
-	//if (!result) {
-	//	std::cerr << "Error reading poses" << std::endl;
-	//	return result.error();
-	//}
+	auto connectionHelper = glasses->createConnectionHelper("TouchDesigner Connector - Player 1");
+	auto connectionResult = connectionHelper->awaitConnection(10000_ms);
+	if (connectionResult) {
+		std::cout << "Glasses connected for exclusive use" << std::endl;
+	} else {
+		std::cerr << "Error connecting to glasses for exclusive use" << std::endl;
+		return connectionResult.error();
+	}
+
+	auto result = readPoses(glasses);
+	if (!result) {
+		std::cerr << "Error reading poses" << std::endl;
+		return result.error();
+	}
 	
 	return tiltfive::kSuccess;
 }
 
 auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
-	//auto start = std::chrono::steady_clock::now();
-	//do {
-	//	auto pose = glasses->getLatestGlassesPose(); //T5_GlassesPoseUsage::kT5_GlassesPoseUsage_GlassesPresentation
-	//	if (!pose) {
-	//		if (pose.error() == tiltfive::Error::kTryAgain) {
-	//			std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
-	//		}
-	//		else {
-	//			return pose.error();
-	//		}
-	//	}
-	//	else {
-	//		std::cout << pose << std::endl;
-	//	}
-	//} while ((std::chrono::steady_clock::now() - start) < 10000_ms);
+	auto start = std::chrono::steady_clock::now();
+	do {
+		auto pose = glasses->getLatestGlassesPose(kT5_GlassesPoseUsage_GlassesPresentation);
+		if (!pose) {
+			if (pose.error() == tiltfive::Error::kTryAgain) {
+				std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
+			}
+			else {
+				return pose.error();
+			}
+		}
+		else {
+			std::cout << pose << std::endl;
+		}
+	} while ((std::chrono::steady_clock::now() - start) < 10000_ms);
 	return tiltfive::kSuccess;
 }
