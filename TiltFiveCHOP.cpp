@@ -32,59 +32,59 @@ constexpr std::chrono::milliseconds operator""_ms(unsigned long long ms) {
 }
 
 
-// These functions are basic C function, which the DLL loader can find
-// much easier than finding a C++ Class.
-// The DLLEXPORT prefix is needed so the compile exports these functions from the .dll
-// you are creating
-extern "C"
-{
-
-DLLEXPORT
-void
-FillCHOPPluginInfo(CHOP_PluginInfo *info)
-{
-	// Always set this to CHOPCPlusPlusAPIVersion.
-	info->apiVersion = CHOPCPlusPlusAPIVersion;
-
-	// The opType is the unique name for this CHOP. It must start with a 
-	// capital A-Z character, and all the following characters must lower case
-	// or numbers (a-z, 0-9)
-	info->customOPInfo.opType->setString("TiltfiveConnector");
-
-	// The opLabel is the text that will show up in the OP Create Dialog
-	info->customOPInfo.opLabel->setString("TiltFive Connector");
-
-	// Information about the author of this OP
-	info->customOPInfo.authorName->setString("Brent Marshall");
-	info->customOPInfo.authorEmail->setString("brent@eightlines.com");
-
-	// This CHOP can work with 0 inputs
-	info->customOPInfo.minInputs = 0;
-
-	// It can accept up to 1 input though, which changes it's behavior
-	info->customOPInfo.maxInputs = 0;
-}
-
-DLLEXPORT
-CHOP_CPlusPlusBase*
-CreateCHOPInstance(const OP_NodeInfo* info)
-{
-	// Return a new instance of your class every time this is called.
-	// It will be called once per CHOP that is using the .dll
-	return new TiltFiveCHOP(info);
-}
-
-DLLEXPORT
-void
-DestroyCHOPInstance(CHOP_CPlusPlusBase* instance)
-{
-	// Delete the instance here, this will be called when
-	// Touch is shutting down, when the CHOP using that instance is deleted, or
-	// if the CHOP loads a different DLL
-	delete (TiltFiveCHOP*)instance;
-}
-
-};
+//// These functions are basic C function, which the DLL loader can find
+//// much easier than finding a C++ Class.
+//// The DLLEXPORT prefix is needed so the compile exports these functions from the .dll
+//// you are creating
+//extern "C"
+//{
+//
+//DLLEXPORT
+//void
+//FillCHOPPluginInfo(CHOP_PluginInfo *info)
+//{
+//	// Always set this to CHOPCPlusPlusAPIVersion.
+//	info->apiVersion = CHOPCPlusPlusAPIVersion;
+//
+//	// The opType is the unique name for this CHOP. It must start with a 
+//	// capital A-Z character, and all the following characters must lower case
+//	// or numbers (a-z, 0-9)
+//	info->customOPInfo.opType->setString("TiltfiveConnector");
+//
+//	// The opLabel is the text that will show up in the OP Create Dialog
+//	info->customOPInfo.opLabel->setString("TiltFive Connector");
+//
+//	// Information about the author of this OP
+//	info->customOPInfo.authorName->setString("Brent Marshall");
+//	info->customOPInfo.authorEmail->setString("brent@eightlines.com");
+//
+//	// This CHOP can work with 0 inputs
+//	info->customOPInfo.minInputs = 0;
+//
+//	// It can accept up to 1 input though, which changes it's behavior
+//	info->customOPInfo.maxInputs = 0;
+//}
+//
+//DLLEXPORT
+//CHOP_CPlusPlusBase*
+//CreateCHOPInstance(const OP_NodeInfo* info)
+//{
+//	// Return a new instance of your class every time this is called.
+//	// It will be called once per CHOP that is using the .dll
+//	return new TiltFiveCHOP(info);
+//}
+//
+//DLLEXPORT
+//void
+//DestroyCHOPInstance(CHOP_CPlusPlusBase* instance)
+//{
+//	// Delete the instance here, this will be called when
+//	// Touch is shutting down, when the CHOP using that instance is deleted, or
+//	// if the CHOP loads a different DLL
+//	delete (TiltFiveCHOP*)instance;
+//}
+//
+//};
 
 
 TiltFiveCHOP::TiltFiveCHOP(const OP_NodeInfo* info) : myNodeInfo(info)
@@ -151,7 +151,7 @@ TiltFiveCHOP::execute(CHOP_Output* output,
 {
 	myExecuteCount++;
 	
-	double	 scale = inputs->getParDouble("Scale");
+	//double	 scale = inputs->getParDouble("Scale");
 
 	// In this case we'll just take the first input and re-output it scaled.
 
@@ -160,25 +160,25 @@ TiltFiveCHOP::execute(CHOP_Output* output,
 		// We know the first CHOP has the same number of channels
 		// because we returned false from getOutputInfo. 
 
-		inputs->enablePar("Speed", 0);	// not used
-		inputs->enablePar("Reset", 0);	// not used
-		inputs->enablePar("Shape", 0);	// not used
+		//inputs->enablePar("Speed", 0);	// not used
+		//inputs->enablePar("Reset", 0);	// not used
+		//inputs->enablePar("Shape", 0);	// not used
 		//inputs->enablePar("TiltFive", 0);
 
 		int ind = 0;
 		const OP_CHOPInput	*cinput = inputs->getInputCHOP(0);
 
-		for (int i = 0 ; i < output->numChannels; i++)
-		{
-			for (int j = 0; j < output->numSamples; j++)
-			{
-				output->channels[i][j] = float(cinput->getChannelData(i)[ind] * scale);
-				ind++;
+		//for (int i = 0 ; i < output->numChannels; i++)
+		//{
+		//	for (int j = 0; j < output->numSamples; j++)
+		//	{
+		//		output->channels[i][j] = float(cinput->getChannelData(i)[ind] * scale);
+		//		ind++;
 
-				// Make sure we don't read past the end of the CHOP input
-				ind = ind % cinput->numSamples;
-			}
-		}
+		//		// Make sure we don't read past the end of the CHOP input
+		//		ind = ind % cinput->numSamples;
+		//	}
+		//}
 
 	}
 	else // If not input is connected, lets output a sine wave instead
@@ -198,15 +198,15 @@ TiltFiveCHOP::execute(CHOP_Output* output,
 
 		//std::cout << inputs->getParInt("Tiltfive") << std::endl;
 
-		inputs->enablePar("Speed", 1);
+		//inputs->enablePar("Speed", 1);
 		inputs->enablePar("Reset", 1);
 
-		double speed = inputs->getParDouble("Speed");
-		double step = speed * 0.01f;
+		//double speed = inputs->getParDouble("Speed");
+		//double step = speed * 0.01f;
 
 
 		// menu items can be evaluated as either an integer menu position, or a string
-		int shape = inputs->getParInt("Shape");
+		//int shape = inputs->getParInt("Shape");
 //		const char *shape_str = inputs->getParString("Shape");
 
 		// keep each channel at a different phase
@@ -218,39 +218,39 @@ TiltFiveCHOP::execute(CHOP_Output* output,
 		// outputing 2 samples (assuming the timeline is running at 60hz).
 
 
-		for (int i = 0; i < output->numChannels; i++)
-		{
-			double offset = myOffset + phase*i;
+		//for (int i = 0; i < output->numChannels; i++)
+		//{
+		//	double offset = myOffset + phase*i;
 
 
-			double v = 0.0f;
+		//	double v = 0.0f;
 
-			switch(shape)
-			{
-				case 0:		// sine
-					v = sin(offset);
-					break;
+			//switch(shape)
+			//{
+			//	case 0:		// sine
+			//		v = sin(offset);
+			//		break;
 
-				case 1:		// square
-					v = fabs(fmod(offset, 1.0)) > 0.5;
-					break;
+			//	case 1:		// square
+			//		v = fabs(fmod(offset, 1.0)) > 0.5;
+			//		break;
 
-				case 2:		// ramp	
-					v = fabs(fmod(offset, 1.0));
-					break;
-			}
+			//	case 2:		// ramp	
+			//		v = fabs(fmod(offset, 1.0));
+			//		break;
+			//}
 
 
-			v *= scale;
+		//	v *= scale;
 
-			for (int j = 0; j < output->numSamples; j++)
-			{
-				output->channels[i][j] = float(v);
-				offset += step;
-			}
-		}
+		//	for (int j = 0; j < output->numSamples; j++)
+		//	{
+		//		output->channels[i][j] = float(v);
+		//		offset += step;
+		//	}
+		//}
 
-		myOffset += step * output->numSamples; 
+		//myOffset += step * output->numSamples; 
 	}
 }
 
@@ -469,6 +469,9 @@ auto TiltFiveCHOP::printUiStatusFlags(Client& client) -> tiltfive::Result<void> 
 	return tiltfive::kSuccess;
 }
 
+//auto TiltFiveCHOP::wait3() {
+//
+//}
 //template <typename T>
 //auto TiltFiveCHOP::waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
 //	bool waitingForService = false;
@@ -546,6 +549,10 @@ auto TiltFiveCHOP::doThingsWithGlasses(Glasses& glasses) -> tiltfive::Result<voi
 		std::cerr << "Error obtaining friendly name:" << friendlyName << std::endl;
 	}
 
+	//std::promise<int> prom;
+	//std::future<int> fut = prom.get_future();
+	//std::thread th1(wait3, std::ref(fut));
+
 	//{
 	//	auto connectionHelper = glasses->createConnectionHelper("TouchDesigner Connector - Player 1");
 	//	auto connectionResult = connectionHelper->awaitConnection(10000_ms);
@@ -581,6 +588,12 @@ auto TiltFiveCHOP::doThingsWithGlasses(Glasses& glasses) -> tiltfive::Result<voi
 	return tiltfive::kSuccess;
 }
 
+//template<typename T>
+//inline auto TiltFiveCHOP::waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T>
+//{
+//	return tiltfive::Result<T>();
+//}
+
 //template <typename T>
 //auto waitForService(std::shared_ptr<tiltfive::Client>& client, const std::function<tiltfive::Result<T>(std::shared_ptr<tiltfive::Client>& client)>& func) -> tiltfive::Result<T> {
 //	bool waitingForService = false;
@@ -599,17 +612,21 @@ auto TiltFiveCHOP::doThingsWithGlasses(Glasses& glasses) -> tiltfive::Result<voi
 //	}
 //};
 
-//auto TiltFiveCHOP::waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
-//};
-
-
 //template <typename T>
-//auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
-//};
-
-//template <typename T>
-//auto waitForService(std::shared_ptr<tiltfive::Client>& client, const std::function<tiltfive::Result<T>(std::shared_ptr<tiltfive::Client>& client)>& func) -> tiltfive::Result<T> {
+//auto TiltFiveCHOP::GetMax(int a, int b) {
+//	return (a > b ? a : b);
+//}
 //
+//template <typename T>
+//auto TiltFiveCHOP::waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
+//	auto result = func(client);
+//	return result;
+//};
+//
+//template <typename T>
+//auto wait2(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) {
+//	auto result = func(client);
+//	return result;
 //};
 
 void TiltFiveCHOP::connectT5() {
@@ -629,7 +646,24 @@ void TiltFiveCHOP::connectT5() {
 		std::exit(EXIT_FAILURE);
 	}
 
-	//TiltFiveCHOP::waitForService<>(*client, printServiceVersion);
+	result = printServiceVersion(*client);
+	if (!result) {
+		std::cerr << "Failed to get service version: " << result << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+
+	//std::future<tiltfive::Result<void>> fut = std::async(printServiceVersion, *client); //(printServiceName, *client);
+
+	//result = waitForService<void>(*client, printServiceVersion);
+		
+		//waitForService<tiltfive::Result>(client, printServiceVersion);
+	//result = wait2<void>(*client, printServiceVersion);
+
+	//result = waitForService<void>(client, printServiceVersion);
+
+	//int res = GetMax<int>(1, 2);
+
+	//TiltFiveCHOP::waitForService<void>(client, printServiceVersion);
 
 	//TiltFiveCHOP::waitForService<void>(*client, printServiceVersion);
 

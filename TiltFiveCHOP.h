@@ -15,6 +15,8 @@
 #include "CHOP_CPlusPlusBase.h"
 #include "include/TiltFiveNative.hpp"
 
+#include <future>
+
 using namespace TD;
 
 /*
@@ -67,11 +69,16 @@ public:
 	using Glasses = std::shared_ptr<tiltfive::Glasses>;
 	using Wand = std::shared_ptr<tiltfive::Wand>;
 
-	template <typename T>
-	auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T> {
-	};
+	//template <typename T>
+	//auto GetMax(int a, int b);
 
+	//template <typename T>
+	//auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T>;
+
+	//template <typename T>
+	//auto wait2(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func); 
 private:
+
 
 	// We don't need to store this pointer, but we do for the example.
 	// The OP_NodeInfo class store information about the node that's using
@@ -95,10 +102,11 @@ private:
 	//template <typename T>
 	//auto waitForService(Client& client, const std::function<tiltfive::Result<T>(Client& client)>& func) -> tiltfive::Result<T>;
 
-
 	auto waitForGlasses(Client& client) -> tiltfive::Result<Glasses>;
 	auto readPoses(Glasses& glasses) -> tiltfive::Result<void>;
 	auto doThingsWithGlasses(Glasses& glasses) -> tiltfive::Result<void>;
+
+	//auto TiltFiveCHOP::wait3();
 
 	class MyParamChangeListener : public tiltfive::ParamChangeListener {
 		auto onSysParamChanged(const std::vector<T5_ParamSys>& changed) -> void override;
