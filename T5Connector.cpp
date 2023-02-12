@@ -43,7 +43,7 @@ bool T5Connector::getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs* inputs, 
 	if (inputs->getNumInputs() > 0) {
 		return false;
 	} else {
-		info->numChannels = 3;
+		info->numChannels = 10;
 		info->sampleRate = 120;
 		return true;
 	}
@@ -55,6 +55,13 @@ void T5Connector::getChannelName(int32_t index, OP_String* name, const OP_Inputs
 		case 0: label = "board_width"; break;
 		case 1: label = "board_length"; break;
 		case 2: label = "board_height"; break;
+		case 3: label = "glasses_pos_x"; break;
+		case 4: label = "glasses_pos_y"; break;
+		case 5: label = "glasses_pos_z"; break;
+		case 6: label = "glasses_rot_x"; break;
+		case 7: label = "glasses_rot_y"; break;
+		case 8: label = "glasses_rot_z"; break;
+		case 9: label = "glasses_rot_w"; break;
 	}
 	name->setString(label);
 }
@@ -82,7 +89,19 @@ void T5Connector::execute(CHOP_Output* output, const OP_Inputs* inputs, void* re
 		}
 
 		for (int i = 0; i < output->numChannels; i++) {
-			output->channels[0][i] = boardDimensions[i];
+			if (i < 3) {
+				output->channels[0][i] = boardDimensions[i];
+			} else {
+				switch (i) {
+					case 3: output->channels[0][i] = position.x;  break;
+					case 4: output->channels[0][i] = position.y;  break;
+					case 5: output->channels[0][i] = position.z;  break;
+					case 6: output->channels[0][i] = rotation.x;  break;
+					case 7: output->channels[0][i] = rotation.y;  break;
+					case 8: output->channels[0][i] = rotation.z;  break;
+					case 9: output->channels[0][i] = rotation.w;  break;
+				}
+			}
 		}
 	}
 }
@@ -296,7 +315,7 @@ auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 	auto start = std::chrono::steady_clock::now();
 	do {
 		auto pose = glasses->getLatestGlassesPose(kT5_GlassesPoseUsage_GlassesPresentation);
-		//std::cout << pose << std::endl;
+		//std::cout << pose << std::endl; // Temporarily Unavailable
 		if (!pose) {
 			if (pose.error() == tiltfive::Error::kTryAgain) {
 				std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
@@ -306,7 +325,9 @@ auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 			}
 		}
 		else {
-			std::cout << pose << std::endl;
+			//std::cout << pose << std::endl;
+			position = pose->posGLS_GBD;
+			rotation = pose->rotToGLS_GBD;
 		}
 	} while ((std::chrono::steady_clock::now() - start) < 10000_ms);
 	return tiltfive::kSuccess;

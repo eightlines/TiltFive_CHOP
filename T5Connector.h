@@ -36,6 +36,8 @@ private:
 	float boardDimensions[3] = { 0.0, 0.0, 0.0 };
 	std::string serviceVersion = "0.0.0"; // 1.3.0
 	std::string glassesId;
+	T5_Vec3 position;
+	T5_Quat rotation;
 
 	void connectT5();
 	auto printGameboardDimensions(Client& client) -> tiltfive::Result<void>;
