@@ -31,6 +31,8 @@ constexpr std::chrono::milliseconds operator""_ms(unsigned long long ms) {
 T5Connector::T5Connector(const OP_NodeInfo* info) : myNodeInfo(info) {
 	myExecuteCount = 0;
 	prevActive = -1;
+	position[3] = {0};
+	rotation[4] = {0};
 }
 
 void T5Connector::getGeneralInfo(CHOP_GeneralInfo* ginfo, const OP_Inputs* inputs, void* reserved1) {
@@ -93,13 +95,13 @@ void T5Connector::execute(CHOP_Output* output, const OP_Inputs* inputs, void* re
 				output->channels[0][i] = boardDimensions[i];
 			} else {
 				switch (i) {
-					case 3: output->channels[0][i] = position.x;  break;
-					case 4: output->channels[0][i] = position.y;  break;
-					case 5: output->channels[0][i] = position.z;  break;
-					case 6: output->channels[0][i] = rotation.x;  break;
-					case 7: output->channels[0][i] = rotation.y;  break;
-					case 8: output->channels[0][i] = rotation.z;  break;
-					case 9: output->channels[0][i] = rotation.w;  break;
+				case 3: output->channels[0][i] = position[0];  break;
+					case 4: output->channels[0][i] = position[1];  break;
+					case 5: output->channels[0][i] = position[2];  break;
+					case 6: output->channels[0][i] = rotation[0];  break;
+					case 7: output->channels[0][i] = rotation[1];  break;
+					case 8: output->channels[0][i] = rotation[2];  break;
+					case 9: output->channels[0][i] = rotation[3];  break;
 				}
 			}
 		}
@@ -311,6 +313,19 @@ auto T5Connector::initGlasses(Glasses& glasses) -> tiltfive::Result<void> {
 	return tiltfive::kSuccess;
 }
 
+void T5Connector::updatePosition(T5_Vec3 pos) {
+	position[0] = pos.x;
+	position[1] = pos.y;
+	position[2] = pos.z;
+}
+
+void T5Connector::updateRotation(T5_Quat rot) {
+	rotation[0] = rot.x;
+	rotation[1] = rot.y;
+	rotation[2] = rot.z;
+	rotation[3] = rot.w;
+}
+
 auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 	auto start = std::chrono::steady_clock::now();
 	do {
@@ -326,9 +341,13 @@ auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 		}
 		else {
 			//std::cout << pose << std::endl;
-			position = pose->posGLS_GBD;
-			rotation = pose->rotToGLS_GBD;
+
+			std::thread t1(&T5Connector::updatePosition, this, pose->posGLS_GBD);
+			std::thread t2(&T5Connector::updateRotation, this, pose->rotToGLS_GBD);
+
+			t1.join();
+			t2.join();
 		}
-	} while ((std::chrono::steady_clock::now() - start) < 10000_ms);
+	} while (true); //(std::chrono::steady_clock::now() - start) < 10000_ms
 	return tiltfive::kSuccess;
 }
