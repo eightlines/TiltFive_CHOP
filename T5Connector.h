@@ -36,8 +36,8 @@ private:
 	float boardDimensions[3] = { 0.0, 0.0, 0.0 };
 	std::string serviceVersion = "0.0.0"; // 1.3.0
 	std::string glassesId;
-	float position[3];
-	float rotation[4];
+	T5_Vec3* position;
+	T5_Quat* rotation;
 
 	void connectT5();
 	auto printGameboardDimensions(Client& client) -> tiltfive::Result<void>;
@@ -46,8 +46,8 @@ private:
 	auto waitForGlasses(Client& client) -> tiltfive::Result<Glasses>;
 	auto initGlasses(Glasses& glasses) -> tiltfive::Result<void>;
 	auto readPoses(Glasses& glasses) -> tiltfive::Result<void>;
-	void updatePosition(T5_Vec3 pos);
-	void updateRotation(T5_Quat rot);
+	//void updatePosition(T5_Vec3 pos);
+	//void updateRotation(T5_Quat rot);
 
 	class MyParamChangedListener : public tiltfive::ParamChangeListener {
 		auto onSysParamChanged(const std::vector<T5_ParamSys>& changed) -> void override {
