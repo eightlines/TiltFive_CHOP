@@ -340,13 +340,26 @@ auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
 			}
 		}
 		else {
-			//std::cout << pose << std::endl;
+			std::cout << pose << std::endl;
+			
+			//T5_Vec3 pos = pose->posGLS_GBD;
 
-			std::thread t1(&T5Connector::updatePosition, this, pose->posGLS_GBD);
-			std::thread t2(&T5Connector::updateRotation, this, pose->rotToGLS_GBD);
+			//position[0] = pos.x;
+			//position[1] = pos.y;
+			//position[2] = pos.z;
 
-			t1.join();
-			t2.join();
+			//T5_Quat rot = pose->rotToGLS_GBD;
+
+			//rotation[0] = rot.x;
+			//rotation[1] = rot.y;
+			//rotation[2] = rot.z;
+			//rotation[3] = rot.w;
+
+			//std::thread t1(&T5Connector::updatePosition, this, pose->posGLS_GBD);
+			//std::thread t2(&T5Connector::updateRotation, this, pose->rotToGLS_GBD);
+
+			//t1.join();
+			//t2.join();
 		}
 	} while (true); //(std::chrono::steady_clock::now() - start) < 10000_ms
 	return tiltfive::kSuccess;
