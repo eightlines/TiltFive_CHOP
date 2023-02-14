@@ -38,6 +38,7 @@ private:
 	std::string glassesId;
 	T5_Vec3* position;
 	T5_Quat* rotation;
+	Glasses glassesBound;
 
 	void connectT5();
 	auto printGameboardDimensions(Client& client) -> tiltfive::Result<void>;
@@ -45,9 +46,6 @@ private:
 	auto printUIStatusFlags(Client& client)->tiltfive::Result<void>;
 	auto waitForGlasses(Client& client) -> tiltfive::Result<Glasses>;
 	auto initGlasses(Glasses& glasses) -> tiltfive::Result<void>;
-	auto readPoses(Glasses& glasses) -> tiltfive::Result<void>;
-	//void updatePosition(T5_Vec3 pos);
-	//void updateRotation(T5_Quat rot);
 
 	class MyParamChangedListener : public tiltfive::ParamChangeListener {
 		auto onSysParamChanged(const std::vector<T5_ParamSys>& changed) -> void override {

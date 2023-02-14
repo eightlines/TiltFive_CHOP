@@ -31,8 +31,14 @@ constexpr std::chrono::milliseconds operator""_ms(unsigned long long ms) {
 T5Connector::T5Connector(const OP_NodeInfo* info) : myNodeInfo(info) {
 	myExecuteCount = 0;
 	prevActive = -1;
-	position = 0;
-	rotation = 0;
+
+	T5_Vec3 p;
+	position = &p;
+	
+	T5_Quat r;
+	rotation = &r;
+
+	glassesBound = nullptr;
 }
 
 void T5Connector::getGeneralInfo(CHOP_GeneralInfo* ginfo, const OP_Inputs* inputs, void* reserved1) {
@@ -54,16 +60,16 @@ bool T5Connector::getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs* inputs, 
 void T5Connector::getChannelName(int32_t index, OP_String* name, const OP_Inputs* inputs, void* reserved1) {
 	const char* label = "";
 	switch (index) {
-		case 0: label = "board_width"; break;
-		case 1: label = "board_length"; break;
-		case 2: label = "board_height"; break;
-		case 3: label = "glasses_pos_x"; break;
-		case 4: label = "glasses_pos_y"; break;
-		case 5: label = "glasses_pos_z"; break;
-		case 6: label = "glasses_rot_x"; break;
-		case 7: label = "glasses_rot_y"; break;
-		case 8: label = "glasses_rot_z"; break;
-		case 9: label = "glasses_rot_w"; break;
+		case 0: label = "bw"; break; // Board Width
+		case 1: label = "bl"; break; // Board Length
+		case 2: label = "bh"; break; // Board Height
+		case 3: label = "px"; break; // Position X
+		case 4: label = "py"; break; // Position Y
+		case 5: label = "pz"; break; // Position Z
+		case 6: label = "qx"; break; // Rotation X
+		case 7: label = "qy"; break; // Rotation Y
+		case 8: label = "qz"; break; // Rotation Z
+		case 9: label = "qw"; break; // Rotation W
 	}
 	name->setString(label);
 }
@@ -72,7 +78,7 @@ void T5Connector::execute(CHOP_Output* output, const OP_Inputs* inputs, void* re
 	myExecuteCount++;
 
 	if (inputs->getNumInputs() > 0) {
-		const OP_CHOPInput* cInput = inputs->getInputCHOP(0);
+		//const OP_CHOPInput* cInput = inputs->getInputCHOP(0);
 	} else {
 		inputs->enablePar("Reset", 1);
 		inputs->enablePar("Tiltfive", 1);
@@ -90,21 +96,39 @@ void T5Connector::execute(CHOP_Output* output, const OP_Inputs* inputs, void* re
 			prevActive = currentActive;
 		}
 
+		if (glassesBound) {
+			auto pose = glassesBound->getLatestGlassesPose(kT5_GlassesPoseUsage_GlassesPresentation);
+			if (!pose) {
+				if (pose.error() == tiltfive::Error::kTryAgain) {
+					std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
+				}
+			} else {
+				//std::cout << pose << std::endl;
+
+				position = &pose->posGLS_GBD;
+				rotation = &pose->rotToGLS_GBD;
+
+				//std::cout << position->x << ", " << position->y << ", " << position->z << std::endl;
+				//std::cout << rotation->x << ", " << rotation->y << ", " << rotation->z << ", " << rotation->w << std::endl;
+			}
+		}
+
 		for (int i = 0; i < output->numChannels; i++) {
 			if (i < 3) {
-				output->channels[0][i] = boardDimensions[i];
+				output->channels[i][1] = boardDimensions[i];
 			} else {
 				switch (i) {
-					case 3: output->channels[0][i] = (position) ? position->x : 0;  break;
-					case 4: output->channels[0][i] = (position) ? position->y : 0;  break;
-					case 5: output->channels[0][i] = (position) ? position->z : 0;  break;
-					case 6: output->channels[0][i] = (rotation) ? rotation->x : 0;  break;
-					case 7: output->channels[0][i] = (rotation) ? rotation->y : 0;  break;
-					case 8: output->channels[0][i] = (rotation) ? rotation->z : 0;  break;
-					case 9: output->channels[0][i] = (rotation) ? rotation->w : 0;  break;
+					case 3: output->channels[i][1] = (glassesBound) ? position->x : 0.0;  break;
+					case 4: output->channels[i][1] = (glassesBound) ? position->y : 0.0;  break;
+					case 5: output->channels[i][1] = (glassesBound) ? position->z : 0.0;  break;
+					case 6: output->channels[i][1] = (glassesBound) ? rotation->x : 0.0;  break;
+					case 7: output->channels[i][1] = (glassesBound) ? rotation->y : 0.0;  break;
+					case 8: output->channels[i][1] = (glassesBound) ? rotation->z : 0.0;  break;
+					case 9: output->channels[i][1] = (glassesBound) ? rotation->w : 0.0;  break;
 				}
 			}
 		}
+
 	}
 }
 
@@ -161,19 +185,10 @@ void T5Connector::setupParameters(OP_ParameterManager* manager, void* reserved1)
 		OP_NumericParameter	np;
 		np.name = "Tiltfive";
 		np.label = "TiltFive";
-		np.defaultValues[0] = 0.0;
+		np.defaultValues[0] = 0;
 		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
-
-	//{ // Text Label
-	//	OP_StringParameter sp;
-	//	sp.name = "Glassesid";
-	//	sp.label = "TiltFive ID";
-	//	sp.defaultValue = "Not Connected";
-	//	OP_ParAppendResult res = manager->appendString(sp);
-	//	assert(res == OP_ParAppendResult::Success);
-	//}
 }
 
 void T5Connector::pulsePressed(const char* name, void* reserved1) {
@@ -299,71 +314,11 @@ auto T5Connector::initGlasses(Glasses& glasses) -> tiltfive::Result<void> {
 	auto connectionResult = connectionHelper->awaitConnection(10000_ms);
 	if (connectionResult) {
 		std::cout << "Glasses connected for exclusive use" << std::endl;
+		glassesBound = glasses;
 	} else {
 		std::cerr << "Error connecting to glasses for exclusive use" << std::endl;
 		return connectionResult.error();
 	}
 
-	auto result = readPoses(glasses);
-	if (!result) {
-		std::cerr << "Error reading poses" << std::endl;
-		return result.error();
-	}
-	
-	return tiltfive::kSuccess;
-}
-
-//void T5Connector::updatePosition(T5_Vec3 pos) {
-//	position[0] = pos.x;
-//	position[1] = pos.y;
-//	position[2] = pos.z;
-//}
-//
-//void T5Connector::updateRotation(T5_Quat rot) {
-//	rotation[0] = rot.x;
-//	rotation[1] = rot.y;
-//	rotation[2] = rot.z;
-//	rotation[3] = rot.w;
-//}
-
-auto T5Connector::readPoses(Glasses& glasses) -> tiltfive::Result<void> {
-	auto start = std::chrono::steady_clock::now();
-	do {
-		auto pose = glasses->getLatestGlassesPose(kT5_GlassesPoseUsage_GlassesPresentation);
-		//std::cout << pose << std::endl; // Temporarily Unavailable
-		if (!pose) {
-			if (pose.error() == tiltfive::Error::kTryAgain) {
-				std::cout << "Pose unavailable - Is gameboard visible?" << std::endl;
-			}
-			else {
-				return pose.error();
-			}
-		}
-		else {
-			std::cout << pose << std::endl;
-			
-			position = &pose->posGLS_GBD;
-			rotation = &pose->rotToGLS_GBD;
-
-			//T5_Vec3 pos = pose->posGLS_GBD;
-
-			//position[0] = pos.x;
-			//position[1] = pos.y;
-			//position[2] = pos.z;
-
-			//T5_Quat rot = pose->rotToGLS_GBD;
-
-			//rotation[0] = rot.x;
-			//rotation[1] = rot.y;
-			//rotation[2] = rot.z;
-			//rotation[3] = rot.w;
-
-			//std::thread t1(&T5Connector::updatePosition, this, pose->posGLS_GBD);
-			//std::thread t2(&T5Connector::updateRotation, this, pose->rotToGLS_GBD);
-
-			//t1.join();
-			//t2.join();
-		}
-	} while (true); //(std::chrono::steady_clock::now() - start) < 10000_ms
 	return tiltfive::kSuccess;
 }
