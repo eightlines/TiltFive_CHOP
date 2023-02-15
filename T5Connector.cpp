@@ -7,10 +7,10 @@ extern "C"
 		info->apiVersion = CHOPCPlusPlusAPIVersion;
 		info->customOPInfo.opType->setString("T5Connector");
 		info->customOPInfo.opLabel->setString("T5Connector");
-		info->customOPInfo.authorEmail->setString("");
-		info->customOPInfo.authorName->setString("");
+		info->customOPInfo.authorEmail->setString("brent@eightlines.com");
+		info->customOPInfo.authorName->setString("Brent Marshall");
 		info->customOPInfo.minInputs = 0;
-		info->customOPInfo.maxInputs = 0;
+		info->customOPInfo.maxInputs = 1;
 	}
 
 	DLLEXPORT
